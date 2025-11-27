@@ -1,36 +1,51 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:taskdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
-    username: sa
-    password: sa
-    driver-class-name: org.h2.Driver
+    url: ${DB_URL:jdbc:mariadb://localhost:3305/taskmanager}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:MyMariaPass123!}
+    driver-class-name: org.mariadb.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
     properties:
-      hibernate.format_sql: true
-      hibernate.jdbc.time_zone: UTC
+      hibernate:
+        format_sql: true
+    show-sql: false
+
   h2:
     console:
-      enabled: true
-      path: /h2
-  profiles:
-    active: dev
+      enabled: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: Ov23li4TjKLwFSBQ6uRH
+            client-secret: 2ad2a93810d202e9d27fb9bf8c9c321f5c0f66a0
+            scope:
+              - read:user
+              - user:email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            client-name: GitHub
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: authorization_code
+        provider:
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: id
 
 server:
-  port: 8080
+  port: ${PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET:change-this-secret-to-a-long-random-string-1234567890}
+  expirationMinutes: 60
+  refreshExpirationDays: 7
 
 logging:
   level:
     org.springframework.security: INFO
-
-jwt:
-  secret: "change-me-super-secret-256-bit-minimum-change-me"
-  expirationMinutes: 60
-  refreshExpirationDays: 7
-
-springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    path: /swagger
