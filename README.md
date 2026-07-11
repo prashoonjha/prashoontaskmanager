@@ -26,6 +26,7 @@ A full-stack Task Management application built with **Spring Boot** and **React*
 - Spring Data JPA
 - PostgreSQL
 - JWT Authentication
+- JUnit 5 & Testcontainers (integration testing)
 - OAuth2
 - Maven
 
@@ -63,7 +64,7 @@ taskmanager/
 ### Clone the repository
 
 ```bash
-git clone https://github.com/prashoonjha/taskmanager.git
+git clone https://github.com/prashoonjha/prashoontaskmanager.git
 cd taskmanager
 ```
 
@@ -111,6 +112,9 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 🧪 Running Tests
 
+The project includes unit tests and integration tests. Integration tests use
+**Testcontainers** to spin up a real PostgreSQL instance in Docker.
+
 ```bash
 mvn test
 ```
@@ -132,7 +136,3 @@ Contributions are welcome! Feel free to fork the repository, create a feature br
 ## 📄 License
 
 This project is licensed under the MIT License.
-
----
-
-Made with ❤️ using Spring Boot and React.
