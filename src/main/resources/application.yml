@@ -2,7 +2,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mariadb://localhost:3305/taskmanager}
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:MyMariaPass123!}
+    password: ${DB_PASSWORD}
     driver-class-name: org.mariadb.jdbc.Driver
 
   jpa:
@@ -13,17 +13,13 @@ spring:
         format_sql: true
     show-sql: false
 
-  h2:
-    console:
-      enabled: false
-
   security:
     oauth2:
       client:
         registration:
           github:
-            client-id: Ov23li4TjKLwFSBQ6uRH
-            client-secret: 2ad2a93810d202e9d27fb9bf8c9c321f5c0f66a0
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
             scope:
               - read:user
               - user:email
@@ -42,7 +38,7 @@ server:
   port: ${PORT:8080}
 
 jwt:
-  secret: ${JWT_SECRET:change-this-secret-to-a-long-random-string-1234567890}
+  secret: ${JWT_SECRET}
   expirationMinutes: 60
   refreshExpirationDays: 7
 
