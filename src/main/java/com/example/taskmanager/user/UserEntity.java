@@ -1,5 +1,6 @@
 package com.example.taskmanager.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +24,7 @@ public class UserEntity {
   @Column(nullable = false, unique = true, length = 50)
   private String username;
 
+  @JsonIgnore
   @Column(nullable = false)
   private String passwordHash;
 
