@@ -1,7 +1,9 @@
 package com.example.taskmanager.task;
 
+import com.example.taskmanager.common.AccessGuard;
 import com.example.taskmanager.task.TaskEntity.Status;
 import com.example.taskmanager.util.PageableUtils;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 
@@ -21,6 +22,7 @@ public class TaskController {
 
   private final TaskRepository repo;
   private final TaskService service;
+  private final AccessGuard access;
 
   @GetMapping
   public Page<TaskEntity> list(
@@ -31,6 +33,7 @@ public class TaskController {
       @RequestParam(required = false) String sortBy,
       @RequestParam(required = false) String dir) {
 
+    access.requireProject(projectId);
     Pageable pageable = PageableUtils.of(page, size, sortBy, dir);
 
     if (status != null) {
@@ -42,8 +45,9 @@ public class TaskController {
   @PostMapping
   public ResponseEntity<TaskEntity> create(
       @PathVariable Long projectId,
-      @RequestBody TaskReq req) {
+      @Valid @RequestBody TaskReq req) {
 
+    access.requireProject(projectId);
     Status status = (req.getStatus() != null) ? req.getStatus() : Status.TODO;
 
     TaskEntity task = service.create(
@@ -51,25 +55,20 @@ public class TaskController {
         req.getTitle(),
         req.getDetails(),
         status,
+        req.getDueAt(),
         req.getAssigneeUsername());
 
     return ResponseEntity.status(HttpStatus.CREATED).body(task);
   }
 
   @PatchMapping("/{taskId}")
-  public ResponseEntity<TaskEntity> update(
+  public TaskEntity update(
       @PathVariable Long projectId,
       @PathVariable Long taskId,
       @RequestBody TaskUpdateReq req) {
 
-    TaskEntity task = repo.findById(taskId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+    TaskEntity task = access.requireTask(projectId, taskId);
 
-    if (!task.getProject().getId().equals(projectId)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task does not belong to this project");
-    }
-
-    // Only update the fields that were actually sent in the request
     if (req.getTitle() != null) {
       task.setTitle(req.getTitle());
     }
@@ -83,13 +82,16 @@ public class TaskController {
       task.setDueAt(req.getDueAt());
     }
 
-    TaskEntity saved = repo.save(task);
-    return ResponseEntity.ok(saved);
+    return repo.save(task);
   }
 
   @DeleteMapping("/{taskId}")
-  public ResponseEntity<?> delete(@PathVariable Long taskId) {
-    repo.deleteById(taskId);
+  public ResponseEntity<Void> delete(
+      @PathVariable Long projectId,
+      @PathVariable Long taskId) {
+
+    TaskEntity task = access.requireTask(projectId, taskId);
+    repo.delete(task);
     return ResponseEntity.noContent().build();
   }
 

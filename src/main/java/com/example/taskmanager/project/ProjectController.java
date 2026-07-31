@@ -1,9 +1,12 @@
 package com.example.taskmanager.project;
 
+import com.example.taskmanager.common.AccessGuard;
+import com.example.taskmanager.task.TaskEntity.Status;
+import com.example.taskmanager.task.TaskRepository;
 import com.example.taskmanager.user.UserEntity;
 import com.example.taskmanager.user.UserRepository;
 import com.example.taskmanager.util.PageableUtils;
-import com.example.taskmanager.util.SecurityUtils;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -13,15 +16,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
 public class ProjectController {
 
   private final ProjectRepository repo;
+  private final TaskRepository tasks;
   private final UserRepository users;
+  private final AccessGuard access;
 
   @GetMapping
   public Page<ProjectEntity> list(
@@ -31,31 +34,13 @@ public class ProjectController {
       @RequestParam(required = false) String dir) {
 
     Pageable pageable = PageableUtils.of(page, size, sortBy, dir);
-
-    // tie projects to the currently logged-in user
-    String username = SecurityUtils.currentUsername();
-    if (username == null) {
-
-      return Page.empty(pageable);
-    }
-
-    return repo.findByOwner_Username(username, pageable);
+    return repo.findByOwner_Username(access.currentUsername(), pageable);
   }
 
   @PostMapping
-  public ResponseEntity<?> create(@RequestBody ProjectReq req) {
-    // who is logged in?
-    String username = SecurityUtils.currentUsername();
-
-    // if no JWT / not logged in -> clear error instead of "no value present"
-    if (username == null) {
-      return ResponseEntity
-          .status(HttpStatus.UNAUTHORIZED)
-          .body(Map.of("message", "Not authenticated"));
-    }
-
-    UserEntity owner = users.findByUsername(username)
-        .orElseThrow(() -> new IllegalStateException("User not found: " + username));
+  public ResponseEntity<ProjectEntity> create(@Valid @RequestBody ProjectReq req) {
+    UserEntity owner = users.findByUsername(access.currentUsername())
+        .orElseThrow(() -> new IllegalStateException("Current user no longer exists"));
 
     ProjectEntity project = ProjectEntity.builder()
         .name(req.getName())
@@ -63,21 +48,30 @@ public class ProjectController {
         .owner(owner)
         .build();
 
-    return ResponseEntity.ok(repo.save(project));
+    return ResponseEntity.status(HttpStatus.CREATED).body(repo.save(project));
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ProjectEntity> get(@PathVariable Long id) {
-    return repo.findById(id)
-        .map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
+  public ProjectEntity get(@PathVariable Long id) {
+    return access.requireProject(id);
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<?> delete(@PathVariable Long id) {
-    repo.deleteById(id);
+  public ResponseEntity<Void> delete(@PathVariable Long id) {
+    ProjectEntity project = access.requireProject(id);
+    repo.delete(project);
     return ResponseEntity.noContent().build();
   }
+
+  @GetMapping("/{id}/stats")
+  public ProjectStats stats(@PathVariable Long id) {
+    access.requireProject(id);
+    long total = tasks.countByProjectId(id);
+    long done = tasks.countByProjectIdAndStatus(id, Status.DONE);
+    return new ProjectStats(total, done);
+  }
+
+  public record ProjectStats(long total, long done) {}
 
   @Data
   static class ProjectReq {

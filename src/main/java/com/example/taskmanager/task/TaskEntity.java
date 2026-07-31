@@ -4,6 +4,7 @@ import com.example.taskmanager.project.ProjectEntity;
 import com.example.taskmanager.user.UserEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -53,6 +54,14 @@ public class TaskEntity {
 
   @Column(nullable = false, updatable = false)
   private Instant createdAt;
+
+  /** Expose just the assignee's username in JSON, not the whole user entity. */
+  @JsonProperty("assignee")
+  public AssigneeView getAssigneeView() {
+    return assignee == null ? null : new AssigneeView(assignee.getId(), assignee.getUsername());
+  }
+
+  public record AssigneeView(Long id, String username) {}
 
   @PrePersist
   public void prePersist() {
