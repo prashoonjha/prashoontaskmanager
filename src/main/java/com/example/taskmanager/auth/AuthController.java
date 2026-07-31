@@ -2,9 +2,11 @@ package com.example.taskmanager.auth;
 
 import com.example.taskmanager.user.UserEntity;
 import com.example.taskmanager.user.UserService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -26,43 +29,50 @@ public class AuthController {
   private final JwtUtil jwtUtil;
 
   @PostMapping("/login")
-  public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
+  public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
     try {
       Authentication auth = authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(
               request.getUsername(), request.getPassword()));
-      String username = auth.getName();
-      String accessToken = jwtUtil.generateAccessToken(username);
-      String refreshToken = jwtUtil.generateRefreshToken(username);
-      return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
+      return ResponseEntity.ok(tokensFor(auth.getName()));
     } catch (BadCredentialsException ex) {
-      return ResponseEntity.status(401).build();
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
     }
   }
 
   @PostMapping("/register")
-  public ResponseEntity<TokenResponse> register(@RequestBody RegisterRequest request) {
-    UserEntity user = userService.register(request.getUsername(), request.getPassword());
-    String accessToken = jwtUtil.generateAccessToken(user.getUsername());
-    String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
-    return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
+  public ResponseEntity<TokenResponse> register(@Valid @RequestBody RegisterRequest request) {
+    try {
+      UserEntity user = userService.register(request.getUsername(), request.getPassword());
+      return ResponseEntity.status(HttpStatus.CREATED).body(tokensFor(user.getUsername()));
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, ex.getMessage());
+    }
   }
 
   @PostMapping("/refresh")
-  public ResponseEntity<TokenResponse> refresh(@RequestBody RefreshRequest request) {
-    var claims = jwtUtil.parse(request.getRefreshToken()).getBody();
-    String username = claims.getSubject();
-    String accessToken = jwtUtil.generateAccessToken(username);
-    String refreshToken = jwtUtil.generateRefreshToken(username);
-    return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
+  public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+    try {
+      // rejects anything that isn't actually a refresh token
+      String username = jwtUtil.parseRefreshSubject(request.getRefreshToken());
+      return ResponseEntity.ok(tokensFor(username));
+    } catch (Exception ex) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+    }
   }
 
   @GetMapping("/me")
   public ResponseEntity<Map<String, Object>> me(@AuthenticationPrincipal UserDetails user) {
     if (user == null) {
-      return ResponseEntity.status(401).build();
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
     }
     return ResponseEntity.ok(Map.of("username", user.getUsername()));
+  }
+
+  private TokenResponse tokensFor(String username) {
+    return new TokenResponse(
+        jwtUtil.generateAccessToken(username),
+        jwtUtil.generateRefreshToken(username));
   }
 
   @Data

@@ -10,6 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -32,16 +33,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
       String token = authHeader.substring(7);
       try {
-        String username = jwtUtil.parse(token).getBody().getSubject();
+        // parseAccessSubject rejects refresh tokens used as bearer credentials
+        String username = jwtUtil.parseAccessSubject(token);
         if (username != null
             && SecurityContextHolder.getContext().getAuthentication() == null) {
           UserDetails user = userDetailsService.loadUserByUsername(username);
           var auth = new UsernamePasswordAuthenticationToken(
               user, null, user.getAuthorities());
+          auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(auth);
         }
-      } catch (Exception ignored) {
-        // if token is invalid ignore it and continue unauthenticated
+      } catch (Exception ex) {
+        // invalid/expired token: leave the request unauthenticated and let the
+        // entry point turn it into a clean 401 if the endpoint requires auth
+        SecurityContextHolder.clearContext();
       }
     }
 
