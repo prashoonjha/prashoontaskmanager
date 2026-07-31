@@ -1,53 +1,38 @@
 # Task Manager
 
-A full-stack Task Management application built with **Spring Boot** and **React** that helps users organize projects, manage tasks, and collaborate efficiently. The application provides secure authentication with JWT and OAuth2, a RESTful API, and a modern responsive frontend.
+A full-stack task management app built with **Spring Boot** and **React**. Users can organize projects, manage tasks through a simple workflow, and comment on them. Authentication is handled with JWT and optional GitHub OAuth2, backed by a RESTful API and a clean React + TypeScript frontend.
 
 ## ✨ Features
 
-- 🔐 Secure authentication with JWT
-- 🌐 OAuth2 login support
+- 🔐 JWT authentication (access + refresh tokens)
+- 🌐 GitHub OAuth2 login
 - 👤 User registration and login
-- 📁 Project management
-- ✅ Create, update, and delete tasks
-- 📌 Task status management
-- 💬 Task comments
-- 🔍 Search and organize tasks
-- 📖 RESTful API
-- 📚 OpenAPI (Swagger) documentation
-- 🛡️ Spring Security integration
+- 📁 Projects, scoped per user
+- ✅ Tasks with status (To do / In progress / Done), assignee, and due date
+- 💬 Comments on tasks
+- 📊 Per-project progress meters
+- 📖 RESTful API with OpenAPI (Swagger) docs
+- 🛡️ Ownership-enforced access control (users only see their own data)
 
 ## 🛠 Tech Stack
 
-### Backend
+**Backend** — Java 21, Spring Boot 3.3, Spring Security, Spring Data JPA, PostgreSQL, JWT (jjwt), OAuth2 client, Maven, JUnit 5 + Testcontainers.
 
-- Java 21
-- Spring Boot
-- Spring Security
-- Spring Data JPA
-- PostgreSQL
-- JWT Authentication
-- JUnit 5 & Testcontainers (integration testing)
-- OAuth2
-- Maven
+**Frontend** — React 18, TypeScript, Vite.
 
-### Frontend
-
-- React
-- TypeScript
-- Vite
-- HTML5
-- CSS3
+**Deployment** — Multi-stage Docker build (frontend compiled and served as static resources by the Spring Boot jar).
 
 ## 📂 Project Structure
 
 ```text
 taskmanager/
-├── frontend/              # React + TypeScript application
+├── frontend/              # React + TypeScript app (Vite)
 ├── src/
 │   ├── main/
-│   │   ├── java/          # Backend source code
-│   │   └── resources/     # Configuration files
-│   └── test/              # Unit tests
+│   │   ├── java/          # Backend source (package-by-feature)
+│   │   └── resources/     # application.yml, etc.
+│   └── test/              # Unit + Testcontainers integration tests
+├── Dockerfile             # Multi-stage: build frontend + jar, slim runtime
 ├── pom.xml
 └── README.md
 ```
@@ -57,54 +42,74 @@ taskmanager/
 ### Prerequisites
 
 - Java 21+
-- Node.js 18+
-- PostgreSQL
-- Maven
+- Node.js 20+
+- PostgreSQL (or Docker)
+- Maven (the `./mvnw` wrapper is included)
 
-### Clone the repository
+### Clone
 
 ```bash
 git clone https://github.com/prashoonjha/prashoontaskmanager.git
 cd taskmanager
 ```
 
-## ⚙️ Backend Setup
+### Environment
 
-Configure your PostgreSQL database in:
-
-```text
-src/main/resources/application.yml
-```
-
-Run the backend:
+The app reads configuration from environment variables. At minimum you need a
+JWT secret and a database. GitHub OAuth is optional — leave the client
+id/secret unset and the app still runs with username/password auth.
 
 ```bash
-mvn spring-boot:run
+export JWT_SECRET="a-long-random-secret-at-least-32-chars"
+export DB_URL="jdbc:postgresql://localhost:5432/taskmanager"
+export DB_USER="postgres"
+export DB_PASSWORD="postgres"
+
+# optional, for GitHub login:
+export GITHUB_CLIENT_ID="..."
+export GITHUB_CLIENT_SECRET="..."
 ```
 
-## 💻 Frontend Setup
+See `.env.example` for the full list.
 
-Navigate to the frontend directory:
+## ⚙️ Running locally (two processes)
+
+Backend:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Frontend dev server (proxies `/api`, `/oauth2`, `/login` to the backend):
 
 ```bash
 cd frontend
-```
-
-Install dependencies:
-
-```bash
 npm install
-```
-
-Start the development server:
-
-```bash
 npm run dev
 ```
 
+The dev frontend runs on http://localhost:5173. For GitHub login in this mode,
+set `OAUTH2_REDIRECT_URI=http://localhost:5173/oauth-callback`.
+
+## 🐳 Running with Docker (single container)
+
+The Dockerfile builds the frontend, bakes it into the Spring Boot jar, and
+serves everything on one port:
+
+```bash
+docker build -t taskmanager .
+docker run -p 8080:8080 \
+  -e JWT_SECRET="..." \
+  -e DB_URL="jdbc:postgresql://host.docker.internal:5432/taskmanager" \
+  -e DB_USER="postgres" -e DB_PASSWORD="postgres" \
+  taskmanager
+```
+
+App available at http://localhost:8080.
+
 ## 📖 API Documentation
 
-After running the backend, Swagger UI is available at:
+With the backend running, Swagger UI is at:
 
 ```
 http://localhost:8080/swagger-ui/index.html
@@ -112,27 +117,25 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 🧪 Running Tests
 
-The project includes unit tests and integration tests. Integration tests use
-**Testcontainers** to spin up a real PostgreSQL instance in Docker.
+Integration tests use **Testcontainers** to spin up a real PostgreSQL instance,
+so Docker must be running.
 
 ```bash
-mvn test
+./mvnw test
 ```
+
+Includes an access-control test that verifies a user cannot read another user's
+project.
 
 ## 📌 Future Improvements
 
 - Real-time notifications
 - File attachments
 - Team collaboration
-- Email notifications
 - Dashboard analytics
 - Dark mode
-- Drag-and-drop task management
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to fork the repository, create a feature branch, and submit a pull request.
+- Drag-and-drop task board
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+MIT
