@@ -1,9 +1,12 @@
 spring:
+  application:
+    name: taskmanager
+
   datasource:
-    url: ${DB_URL:jdbc:mariadb://localhost:3305/taskmanager}
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.mariadb.jdbc.Driver
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/taskmanager}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
@@ -13,29 +16,24 @@ spring:
         format_sql: true
     show-sql: false
 
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
-            scope:
-              - read:user
-              - user:email
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            client-name: GitHub
-            client-authentication-method: client_secret_basic
-            authorization-grant-type: authorization_code
-        provider:
-          github:
-            authorization-uri: https://github.com/login/oauth/authorize
-            token-uri: https://github.com/login/oauth/access_token
-            user-info-uri: https://api.github.com/user
-            user-name-attribute: id
-
 server:
   port: ${PORT:8080}
+
+# GitHub OAuth is optional. It only turns on when GITHUB_CLIENT_ID is set (see
+# GithubOAuthConfig). Leaving these unset lets the app start with username/password
+# auth only, which is why the registration is NOT declared under
+# spring.security.oauth2 here (an empty client-id there fails startup on Boot 3.3).
+github:
+  oauth:
+    client-id: ${GITHUB_CLIENT_ID:}
+    client-secret: ${GITHUB_CLIENT_SECRET:}
+
+app:
+  oauth2:
+    # Where the browser lands after a successful GitHub login. Same-origin by
+    # default (the built frontend); override to http://localhost:5173/oauth-callback
+    # when running the frontend dev server separately.
+    redirect-uri: ${OAUTH2_REDIRECT_URI:/oauth-callback}
 
 jwt:
   secret: ${JWT_SECRET}
