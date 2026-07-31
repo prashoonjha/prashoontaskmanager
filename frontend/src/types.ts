@@ -23,12 +23,13 @@ export interface Comment {
   id: number;
   body: string;
   createdAt?: string | null;
+  authorUsername?: string | null;
 }
 
 export interface Page<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  number: number; 
-  size: number;   // page size
+  number: number;
+  size: number;
 }

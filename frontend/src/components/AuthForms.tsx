@@ -1,13 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { AuthTokens, login, register } from "../api";
+import { type AuthTokens, login, register, API_BASE } from "../api";
 
 interface AuthFormsProps {
   onAuth(tokens: AuthTokens, username: string): void;
 }
 
-export function AuthForms(props: AuthFormsProps) {
-  const { onAuth } = props;
-
+export function AuthForms({ onAuth }: AuthFormsProps) {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -18,282 +16,141 @@ export function AuthForms(props: AuthFormsProps) {
     event.preventDefault();
     setError(null);
 
-    const trimmedUser = username.trim();
-    const trimmedPass = password.trim();
-
-    if (!trimmedUser || !trimmedPass) {
-      setError("Username and password are required.");
+    const user = username.trim();
+    const pass = password.trim();
+    if (!user || !pass) {
+      setError("Enter a username and password.");
       return;
     }
 
     setLoading(true);
     try {
-      if (tab === "login") {
-        const tokens = await login(trimmedUser, trimmedPass);
-        onAuth(tokens, trimmedUser);
-      } else {
-        const tokens = await register(trimmedUser, trimmedPass);
-        onAuth(tokens, trimmedUser);
-      }
+      const tokens =
+        tab === "login" ? await login(user, pass) : await register(user, pass);
+      onAuth(tokens, user);
     } catch (err) {
-      const message = (err as Error).message || "Authentication failed";
-      setError(message);
+      setError((err as Error).message || "Something went wrong. Try again.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        margin: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background:
-          "radial-gradient(circle at top left, rgba(56,189,248,0.25), transparent 60%), radial-gradient(circle at bottom right, rgba(129,140,248,0.25), transparent 55%), #020617",
-        fontFamily:
-          'system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text","Segoe UI", sans-serif',
-        color: "#e5e7eb",
-        padding: "1.5rem",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          borderRadius: 24,
-          border: "1px solid rgba(148,163,184,0.45)",
-          background:
-            "linear-gradient(145deg, rgba(15,23,42,0.98), rgba(15,23,42,0.92))",
-          boxShadow:
-            "0 22px 55px rgba(15,23,42,0.95), 0 0 0 1px rgba(15,23,42,1)",
-          padding: "1.6rem 1.8rem 1.8rem",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "radial-gradient(circle at top left, rgba(56,189,248,0.10), transparent 55%), radial-gradient(circle at bottom right, rgba(129,140,248,0.10), transparent 55%)",
-            opacity: 0.9,
-            pointerEvents: "none",
-          }}
-        />
-
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 4,
-              marginBottom: "0.9rem",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 13,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color: "#9ca3af",
-              }}
-            >
-              Task Manager
-            </div>
-            <div
-              style={{
-                fontSize: 18,
-                fontWeight: 600,
-                letterSpacing: "0.02em",
-              }}
-            >
-              Welcome back
-            </div>
-          </div>
-
-          <p
-            style={{
-              margin: "0 0 1.1rem",
-              fontSize: 13,
-              color: "#9ca3af",
-            }}
-          >
-            {tab === "login"
-              ? "Sign in to access your projects and tasks."
-              : "Create an account to start organizing your work."}
-          </p>
-
-          <div
-            style={{
-              display: "inline-flex",
-              padding: 4,
-              borderRadius: 999,
-              border: "1px solid rgba(148,163,184,0.5)",
-              background: "rgba(15,23,42,0.96)",
-              marginBottom: "1.1rem",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setTab("login")}
-              style={{
-                flex: 1,
-                padding: "0.35rem 0.9rem",
-                borderRadius: 999,
-                border: "none",
-                cursor: "pointer",
-                background:
-                  tab === "login"
-                    ? "linear-gradient(135deg, #38bdf8, #0ea5e9)"
-                    : "transparent",
-                color: tab === "login" ? "#0b1120" : "#9ca3af",
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: "0.10em",
-                textTransform: "uppercase",
-              }}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("register")}
-              style={{
-                flex: 1,
-                padding: "0.35rem 0.9rem",
-                borderRadius: 999,
-                border: "none",
-                cursor: "pointer",
-                background:
-                  tab === "register"
-                    ? "linear-gradient(135deg, #38bdf8, #0ea5e9)"
-                    : "transparent",
-                color: tab === "register" ? "#0b1120" : "#9ca3af",
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: "0.10em",
-                textTransform: "uppercase",
-              }}
-            >
-              Register
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: "0.8rem" }}>
-              <label
-                htmlFor="username"
-                style={{
-                  display: "block",
-                  fontSize: 11,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "#9ca3af",
-                  marginBottom: 4,
-                }}
-              >
-                Username
-              </label>
-              <input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. prashoon"
-                autoComplete="username"
-                style={{
-                  width: "100%",
-                  padding: "0.5rem 0.65rem",
-                  borderRadius: 12,
-                  border: "1px solid rgba(148,163,184,0.6)",
-                  background: "rgba(15,23,42,0.96)",
-                  color: "#e5e7eb",
-                  outline: "none",
-                  fontSize: 14,
-                }}
-              />
-            </div>
-            <div style={{ marginBottom: "0.8rem" }}>
-              <label
-                htmlFor="password"
-                style={{
-                  display: "block",
-                  fontSize: 11,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "#9ca3af",
-                  marginBottom: 4,
-                }}
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                autoComplete={tab === "login" ? "current-password" : "new-password"}
-                style={{
-                  width: "100%",
-                  padding: "0.5rem 0.65rem",
-                  borderRadius: 12,
-                  border: "1px solid rgba(148,163,184,0.6)",
-                  background: "rgba(15,23,42,0.96)",
-                  color: "#e5e7eb",
-                  outline: "none",
-                  fontSize: 14,
-                }}
-              />
-            </div>
-
-            {error && (
-              <div
-                style={{
-                  marginTop: 4,
-                  marginBottom: 10,
-                  fontSize: 12,
-                  color: "#fecaca",
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: "100%",
-                marginTop: "0.4rem",
-                padding: "0.6rem 0.75rem",
-                borderRadius: 999,
-                border: "1px solid rgba(56,189,248,0.8)",
-                background:
-                  "linear-gradient(135deg, rgba(56,189,248,1), rgba(14,165,233,1))",
-                color: "#0b1120",
-                fontSize: 13,
-                fontWeight: 600,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-                boxShadow: "0 16px 40px rgba(56,189,248,0.5)",
-                opacity: loading ? 0.7 : 1,
-              }}
-            >
-              {loading
-                ? tab === "login"
-                  ? "Signing in…"
-                  : "Creating account…"
-                : tab === "login"
-                ? "Sign in"
-                : "Create account"}
-            </button>
-          </form>
+    <div className="auth-shell">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <span className="auth-mark">Ledger</span>
+          <span className="auth-sub">task manager</span>
         </div>
+
+        <h1 className="auth-title">
+          {tab === "login" ? "Welcome back" : "Create your account"}
+        </h1>
+        <p className="auth-lede">
+          {tab === "login"
+            ? "Sign in to pick up where you left off."
+            : "Start organizing your projects and tasks."}
+        </p>
+
+        <div className="auth-tabs" role="tablist">
+          <button
+            role="tab"
+            aria-selected={tab === "login"}
+            className={tab === "login" ? "active" : ""}
+            onClick={() => {
+              setTab("login");
+              setError(null);
+            }}
+          >
+            Log in
+          </button>
+          <button
+            role="tab"
+            aria-selected={tab === "register"}
+            className={tab === "register" ? "active" : ""}
+            onClick={() => {
+              setTab("register");
+              setError(null);
+            }}
+          >
+            Register
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 14 }}>
+            <label className="label" htmlFor="username">
+              Username
+            </label>
+            <input
+              id="username"
+              className="field"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="prashoon"
+              autoComplete="username"
+            />
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <label className="label" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              className="field"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete={tab === "login" ? "current-password" : "new-password"}
+            />
+          </div>
+
+          {error && (
+            <div className="banner-error" style={{ marginBottom: 14 }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="btn btn-primary"
+            style={{ width: "100%" }}
+            disabled={loading}
+          >
+            {loading
+              ? "Working…"
+              : tab === "login"
+              ? "Log in"
+              : "Create account"}
+          </button>
+        </form>
+
+        <div className="auth-divider">
+          <span>or</span>
+        </div>
+
+        <a
+          className="btn"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            textDecoration: "none",
+          }}
+          href={`${API_BASE}/oauth2/authorization/github`}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+            />
+          </svg>
+          Continue with GitHub
+        </a>
       </div>
     </div>
   );

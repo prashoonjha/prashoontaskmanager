@@ -132,6 +132,18 @@ export async function deleteProject(
   );
 }
 
+export interface ProjectStats {
+  total: number;
+  done: number;
+}
+
+export async function fetchProjectStats(
+  token: string,
+  projectId: number
+): Promise<ProjectStats> {
+  return request<ProjectStats>(`/api/projects/${projectId}/stats`, {}, token);
+}
+
 // ===== Tasks =====
 
 export async function fetchTasks(
