@@ -10,7 +10,7 @@ export function TopBar({ username, onLogout }: TopBarProps) {
   return (
     <header className="topbar">
       <div className="topbar-brand">
-        <span className="topbar-mark">Ledger</span>
+        <span className="topbar-mark">ManageIt</span>
         <span className="topbar-sub">task manager</span>
       </div>
       <div className="topbar-user">

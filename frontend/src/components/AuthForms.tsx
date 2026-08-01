@@ -39,7 +39,7 @@ export function AuthForms({ onAuth }: AuthFormsProps) {
     <div className="auth-shell">
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="auth-mark">Ledger</span>
+          <span className="auth-mark">ManageIt</span>
           <span className="auth-sub">task manager</span>
         </div>
 
