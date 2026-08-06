@@ -1,6 +1,11 @@
 # Test configuration. Testcontainers provides the datasource at runtime
-# (see TestcontainersConfiguration), so we only need to supply the JWT secret
-# and a fixed token lifetime for the app context to start during tests.
+# (see TestcontainersConfiguration); we supply the JWT secret and force
+# Hibernate to build the schema on the fresh test database.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
 jwt:
   secret: test-secret-key-for-ci-at-least-32-characters-long
   expirationMinutes: 60
