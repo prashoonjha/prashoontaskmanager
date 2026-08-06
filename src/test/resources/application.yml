@@ -1,0 +1,7 @@
+# Test configuration. Testcontainers provides the datasource at runtime
+# (see TestcontainersConfiguration), so we only need to supply the JWT secret
+# and a fixed token lifetime for the app context to start during tests.
+jwt:
+  secret: test-secret-key-for-ci-at-least-32-characters-long
+  expirationMinutes: 60
+  refreshExpirationDays: 7
