@@ -31,15 +31,46 @@ export function formatDate(value?: string | null): string | null {
   });
 }
 
-export function dueLabel(value?: string | null): { text: string; overdue: boolean } | null {
+export type DueState = "overdue" | "soon" | "later";
+
+export interface DueInfo {
+  text: string;
+  state: DueState;
+  days: number;
+}
+
+export function dueInfo(value?: string | null): DueInfo | null {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  const now = new Date();
-  const overdue = date.getTime() < now.getTime();
-  const text = date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-  return { text, overdue };
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const startOfDue = new Date(date);
+  startOfDue.setHours(0, 0, 0, 0);
+
+  const days = Math.round(
+    (startOfDue.getTime() - startOfToday.getTime()) / 86400000
+  );
+
+  let state: DueState;
+  if (days < 0) {
+    state = "overdue";
+  } else if (days <= 2) {
+    state = "soon";
+  } else {
+    state = "later";
+  }
+
+  return { text: formatDate(value) ?? "", state, days };
+}
+
+export function dueText(info: DueInfo): string {
+  if (info.state === "overdue") {
+    const n = Math.abs(info.days);
+    return n === 0 ? "due today" : `overdue by ${n}d`;
+  }
+  if (info.days === 0) return "due today";
+  if (info.days === 1) return "due tomorrow";
+  return `due ${info.text}`;
 }

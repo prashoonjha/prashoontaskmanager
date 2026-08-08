@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import type { Task, TaskStatus, Comment } from "../types";
-import { statusLabel, formatDate, initials } from "../ui";
+import { statusLabel, formatDate, initials, dueInfo, dueText } from "../ui";
 
 interface TaskDetailProps {
   task: Task | null;
@@ -46,6 +46,10 @@ export function TaskDetail({
   }
 
   const created = formatDate(task.createdAt);
+  const due = dueInfo(task.dueAt);
+  const isDone = task.status === "DONE";
+  const dueClass =
+    due && !isDone && due.state !== "later" ? ` due-${due.state}` : "";
 
   return (
     <section className="detail">
@@ -90,6 +94,16 @@ export function TaskDetail({
               ? task.assignee.username.replace(/^github_/, "")
               : "Unassigned"}
           </div>
+        </div>
+        <div className="meta-box">
+          <div className="label" style={{ marginBottom: 6 }}>
+            Due date
+          </div>
+          {due ? (
+            <span className={`due-chip${dueClass}`}>{dueText(due)}</span>
+          ) : (
+            <div className="meta-value">No due date</div>
+          )}
         </div>
       </div>
 

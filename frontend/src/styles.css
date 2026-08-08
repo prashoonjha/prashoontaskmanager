@@ -526,8 +526,23 @@ select {
   margin-top: 5px;
   margin-left: 15px;
 }
-.overdue {
+.due-chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #f1efe8;
+  color: #6b665c;
+}
+.due-chip.due-overdue {
+  background: #fdecea;
   color: var(--danger);
+}
+.due-chip.due-soon {
+  background: #fbf1dc;
+  color: #8a6d1a;
 }
 
 /* ============ Task detail ============ */

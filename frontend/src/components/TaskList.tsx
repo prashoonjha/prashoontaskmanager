@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import type { Task, TaskStatus } from "../types";
-import { statusLabel, dueLabel } from "../ui";
+import { statusLabel, dueInfo, dueText } from "../ui";
 
 type StatusFilter = TaskStatus | "ALL";
 
@@ -147,8 +147,10 @@ export function TaskList({
         <div className="task-list">
           {tasks.map((task) => {
             const active = task.id === selectedTaskId;
-            const due = dueLabel(task.dueAt);
+            const due = dueInfo(task.dueAt);
             const isDone = task.status === "DONE";
+            const dueClass =
+              due && !isDone && due.state !== "later" ? ` due-${due.state}` : "";
             return (
               <div
                 key={task.id}
@@ -173,10 +175,7 @@ export function TaskList({
                     ? ` · ${task.assignee.username.replace(/^github_/, "")}`
                     : ""}
                   {due ? (
-                    <span className={due.overdue && !isDone ? "overdue" : ""}>
-                      {" "}
-                      · due {due.text}
-                    </span>
+                    <span className={`due-chip${dueClass}`}>{dueText(due)}</span>
                   ) : null}
                 </div>
               </div>
