@@ -20,6 +20,7 @@ export interface CreateTaskInput {
   title: string;
   details?: string;
   status: TaskStatus;
+  dueAt?: string;
   assigneeUsername?: string;
 }
 

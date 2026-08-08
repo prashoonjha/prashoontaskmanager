@@ -23,6 +23,7 @@ interface TaskListProps {
     title: string;
     details?: string;
     status: TaskStatus;
+    dueAt?: string;
     assigneeUsername?: string;
   }): Promise<void>;
 }
@@ -41,6 +42,7 @@ export function TaskList({
   const [details, setDetails] = useState("");
   const [status, setStatus] = useState<TaskStatus>("TODO");
   const [assignee, setAssignee] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -54,11 +56,13 @@ export function TaskList({
         title: trimmed,
         details: details.trim() || undefined,
         status,
+        dueAt: dueDate ? new Date(dueDate + "T23:59:59").toISOString() : undefined,
         assigneeUsername: assignee.trim() || undefined,
       });
       setTitle("");
       setDetails("");
       setAssignee("");
+      setDueDate("");
       setStatus("TODO");
       setExpanded(false);
     } finally {
@@ -129,6 +133,18 @@ export function TaskList({
                 placeholder="Assignee (optional)"
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
+              />
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <label className="label" htmlFor="task-due">
+                Due date (optional)
+              </label>
+              <input
+                id="task-due"
+                type="date"
+                className="field"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
           </div>
