@@ -213,20 +213,36 @@ export async function deleteTask(
   );
 }
 
+export interface TaskUpdate {
+  title?: string;
+  details?: string;
+  status?: TaskStatus;
+  dueAt?: string | null;
+}
+
+export async function updateTask(
+  token: string,
+  projectId: number,
+  taskId: number,
+  changes: TaskUpdate
+): Promise<Task> {
+  return request<Task>(
+    `/api/projects/${projectId}/tasks/${taskId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(changes),
+    },
+    token
+  );
+}
+
 export async function updateTaskStatus(
   token: string,
   projectId: number,
   taskId: number,
   status: TaskStatus
 ): Promise<Task> {
-  return request<Task>(
-    `/api/projects/${projectId}/tasks/${taskId}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    },
-    token
-  );
+  return updateTask(token, projectId, taskId, { status });
 }
 
 // ===== Comments =====

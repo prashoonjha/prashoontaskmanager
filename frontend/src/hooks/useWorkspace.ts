@@ -11,6 +11,7 @@ import {
   fetchProjects,
   fetchProjectStats,
   fetchTasks,
+  updateTask,
   updateTaskStatus,
 } from "../api";
 
@@ -197,6 +198,20 @@ export function useWorkspace(token: string) {
     [token, selectedProjectId, refreshCounts]
   );
 
+  const changeDueDate = useCallback(
+    async (id: number, dueAt: string) => {
+      if (selectedProjectId === null) return;
+      setError(null);
+      try {
+        const updated = await updateTask(token, selectedProjectId, id, { dueAt });
+        setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    },
+    [token, selectedProjectId]
+  );
+
   const addComment = useCallback(
     async (bodyText: string) => {
       if (selectedTaskId === null) return;
@@ -248,6 +263,7 @@ export function useWorkspace(token: string) {
     addTask,
     removeTask,
     changeStatus,
+    changeDueDate,
     addComment,
     removeComment,
     clearError: () => setError(null),

@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from "react";
 import type { Task, TaskStatus, Comment } from "../types";
-import { statusLabel, formatDate, initials, dueInfo, dueText } from "../ui";
+import { statusLabel, formatDate, initials, dueInfo, dueText, isoToDateInput } from "../ui";
 
 interface TaskDetailProps {
   task: Task | null;
   comments: Comment[];
   loadingComments: boolean;
   onChangeStatus(taskId: number, status: TaskStatus): void;
+  onChangeDueDate(taskId: number, dueAt: string): void;
   onDeleteTask(taskId: number): void;
   onAddComment(body: string): Promise<void>;
   onDeleteComment(commentId: number): void;
@@ -17,6 +18,7 @@ export function TaskDetail({
   comments,
   loadingComments,
   onChangeStatus,
+  onChangeDueDate,
   onDeleteTask,
   onAddComment,
   onDeleteComment,
@@ -99,11 +101,26 @@ export function TaskDetail({
           <div className="label" style={{ marginBottom: 6 }}>
             Due date
           </div>
-          {due ? (
-            <span className={`due-chip${dueClass}`}>{dueText(due)}</span>
-          ) : (
-            <div className="meta-value">No due date</div>
+          {due && (
+            <span
+              className={`due-chip${dueClass}`}
+              style={{ marginLeft: 0, marginBottom: 6, display: "inline-block" }}
+            >
+              {dueText(due)}
+            </span>
           )}
+          <input
+            type="date"
+            className="field"
+            value={isoToDateInput(task.dueAt)}
+            onChange={(e) =>
+              e.target.value &&
+              onChangeDueDate(
+                task.id,
+                new Date(e.target.value + "T23:59:59").toISOString()
+              )
+            }
+          />
         </div>
       </div>
 
