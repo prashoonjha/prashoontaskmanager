@@ -1,3 +1,5 @@
+![CI](https://github.com/prashoonjha/prashoontaskmanager/actions/workflows/ci.yml/badge.svg)
+
 # Task Manager
 
 A full-stack task management app built with **Spring Boot** and **React**. Users can organize projects, manage tasks through a simple workflow, and comment on them. Authentication is handled with JWT and optional GitHub OAuth2, backed by a RESTful API and a clean React + TypeScript frontend.
