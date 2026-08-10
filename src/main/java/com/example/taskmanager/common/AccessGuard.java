@@ -12,14 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Central place for "does the current user own this thing?" checks.
- *
- * Ownership always chains up to the project owner: a task belongs to a project,
- * a comment belongs to a task belongs to a project. If the current user is not
- * the owner we throw 404 (not 403) on purpose, so callers can't probe which ids
- * exist by watching the status code.
- */
 @Component
 @RequiredArgsConstructor
 public class AccessGuard {
@@ -40,19 +32,16 @@ public class AccessGuard {
     return new ResponseStatusException(HttpStatus.NOT_FOUND, what + " not found");
   }
 
-  /** The current user, or 401 if there is none. */
   public String currentUsername() {
     return requireUsername();
   }
 
-  /** Load a project the current user owns, or 404. */
   public ProjectEntity requireProject(Long projectId) {
     String username = requireUsername();
     return projects.findByIdAndOwner_Username(projectId, username)
         .orElseThrow(() -> notFound("Project"));
   }
 
-  /** Load a task within a project the current user owns, or 404. */
   public TaskEntity requireTask(Long projectId, Long taskId) {
     requireProject(projectId);
     TaskEntity task = tasks.findById(taskId).orElseThrow(() -> notFound("Task"));
@@ -62,7 +51,6 @@ public class AccessGuard {
     return task;
   }
 
-  /** Load a task the current user can reach (via project ownership), or 404. */
   public TaskEntity requireTask(Long taskId) {
     String username = requireUsername();
     TaskEntity task = tasks.findById(taskId).orElseThrow(() -> notFound("Task"));
@@ -72,7 +60,6 @@ public class AccessGuard {
     return task;
   }
 
-  /** Load a comment within a task the current user can reach, or 404. */
   public CommentEntity requireComment(Long taskId, Long commentId) {
     requireTask(taskId);
     CommentEntity comment = comments.findById(commentId)

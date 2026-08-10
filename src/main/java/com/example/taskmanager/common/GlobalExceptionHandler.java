@@ -14,8 +14,6 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  // Preserve the status of explicitly-thrown ResponseStatusExceptions
-  // (e.g. 404 for a resource the current user doesn't own, 401, 403, 409).
   @ExceptionHandler(ResponseStatusException.class)
   public ResponseEntity<ApiError> handleStatus(ResponseStatusException ex) {
     HttpStatusCode status = ex.getStatusCode();

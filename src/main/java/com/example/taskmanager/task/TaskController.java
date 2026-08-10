@@ -3,7 +3,6 @@ package com.example.taskmanager.task;
 import com.example.taskmanager.common.AccessGuard;
 import com.example.taskmanager.task.TaskEntity.Status;
 import com.example.taskmanager.util.PageableUtils;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +44,7 @@ public class TaskController {
   @PostMapping
   public ResponseEntity<TaskEntity> create(
       @PathVariable Long projectId,
-      @Valid @RequestBody TaskReq req) {
+      @RequestBody TaskReq req) {
 
     access.requireProject(projectId);
     Status status = (req.getStatus() != null) ? req.getStatus() : Status.TODO;
@@ -62,7 +61,7 @@ public class TaskController {
   }
 
   @PatchMapping("/{taskId}")
-  public TaskEntity update(
+  public ResponseEntity<TaskEntity> update(
       @PathVariable Long projectId,
       @PathVariable Long taskId,
       @RequestBody TaskUpdateReq req) {
@@ -82,11 +81,11 @@ public class TaskController {
       task.setDueAt(req.getDueAt());
     }
 
-    return repo.save(task);
+    return ResponseEntity.ok(repo.save(task));
   }
 
   @DeleteMapping("/{taskId}")
-  public ResponseEntity<Void> delete(
+  public ResponseEntity<?> delete(
       @PathVariable Long projectId,
       @PathVariable Long taskId) {
 

@@ -1,12 +1,9 @@
 package com.example.taskmanager.project;
 
 import com.example.taskmanager.common.AccessGuard;
-import com.example.taskmanager.task.TaskEntity.Status;
-import com.example.taskmanager.task.TaskRepository;
 import com.example.taskmanager.user.UserEntity;
 import com.example.taskmanager.user.UserRepository;
 import com.example.taskmanager.util.PageableUtils;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 public class ProjectController {
 
   private final ProjectRepository repo;
-  private final TaskRepository tasks;
   private final UserRepository users;
   private final AccessGuard access;
 
@@ -38,7 +34,7 @@ public class ProjectController {
   }
 
   @PostMapping
-  public ResponseEntity<ProjectEntity> create(@Valid @RequestBody ProjectReq req) {
+  public ResponseEntity<ProjectEntity> create(@RequestBody ProjectReq req) {
     UserEntity owner = users.findByUsername(access.currentUsername())
         .orElseThrow(() -> new IllegalStateException("Current user no longer exists"));
 
@@ -62,16 +58,6 @@ public class ProjectController {
     repo.delete(project);
     return ResponseEntity.noContent().build();
   }
-
-  @GetMapping("/{id}/stats")
-  public ProjectStats stats(@PathVariable Long id) {
-    access.requireProject(id);
-    long total = tasks.countByProjectId(id);
-    long done = tasks.countByProjectIdAndStatus(id, Status.DONE);
-    return new ProjectStats(total, done);
-  }
-
-  public record ProjectStats(long total, long done) {}
 
   @Data
   static class ProjectReq {
