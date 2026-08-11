@@ -545,6 +545,39 @@ select {
   color: #8a6d1a;
 }
 
+.prio-chip {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.prio-chip.prio-HIGH {
+  background: #fdecea;
+  color: #b4322f;
+}
+.prio-chip.prio-LOW {
+  background: #eef1f5;
+  color: #5a6b82;
+}
+
+.label-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  margin-left: 15px;
+}
+.label-chip {
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eeedfb;
+  color: #4f46e5;
+  font-weight: 500;
+}
+
 /* ============ Task detail ============ */
 .detail {
   padding: 18px 22px;
@@ -697,4 +730,8 @@ select {
     border-bottom: 1px solid var(--line);
     max-height: 240px;
   }
+}
+
+.detail-labels {
+  margin: 16px 0 6px;
 }

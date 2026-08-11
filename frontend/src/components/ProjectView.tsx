@@ -54,6 +54,8 @@ export function ProjectView({ token, username, onLogout }: ProjectViewProps) {
           loadingComments={ws.loadingComments}
           onChangeStatus={ws.changeStatus}
           onChangeDueDate={ws.changeDueDate}
+          onChangePriority={ws.changePriority}
+          onChangeLabels={ws.changeLabels}
           onDeleteTask={ws.removeTask}
           onAddComment={ws.addComment}
           onDeleteComment={ws.removeComment}

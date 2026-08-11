@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import type { Task, TaskStatus, Comment } from "../types";
+import { useState, useEffect, type FormEvent } from "react";
+import type { Task, TaskStatus, TaskPriority, Comment } from "../types";
 import { statusLabel, formatDate, initials, dueInfo, dueText, isoToDateInput } from "../ui";
 
 interface TaskDetailProps {
@@ -8,6 +8,8 @@ interface TaskDetailProps {
   loadingComments: boolean;
   onChangeStatus(taskId: number, status: TaskStatus): void;
   onChangeDueDate(taskId: number, dueAt: string): void;
+  onChangePriority(taskId: number, priority: TaskPriority): void;
+  onChangeLabels(taskId: number, labels: string[]): void;
   onDeleteTask(taskId: number): void;
   onAddComment(body: string): Promise<void>;
   onDeleteComment(commentId: number): void;
@@ -19,12 +21,19 @@ export function TaskDetail({
   loadingComments,
   onChangeStatus,
   onChangeDueDate,
+  onChangePriority,
+  onChangeLabels,
   onDeleteTask,
   onAddComment,
   onDeleteComment,
 }: TaskDetailProps) {
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
+  const [labelText, setLabelText] = useState("");
+
+  useEffect(() => {
+    setLabelText(task?.labels?.join(", ") ?? "");
+  }, [task?.id, task?.labels]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -89,6 +98,22 @@ export function TaskDetail({
         </div>
         <div className="meta-box">
           <div className="label" style={{ marginBottom: 6 }}>
+            Priority
+          </div>
+          <select
+            className="field"
+            value={task.priority ?? "MEDIUM"}
+            onChange={(e) =>
+              onChangePriority(task.id, e.target.value as TaskPriority)
+            }
+          >
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+          </select>
+        </div>
+        <div className="meta-box">
+          <div className="label" style={{ marginBottom: 6 }}>
             Assignee
           </div>
           <div className="meta-value">
@@ -122,6 +147,41 @@ export function TaskDetail({
             }
           />
         </div>
+      </div>
+
+      <div className="detail-labels">
+        <div className="label" style={{ marginBottom: 6 }}>
+          Labels
+        </div>
+        {task.labels && task.labels.length > 0 && (
+          <div className="label-row" style={{ marginLeft: 0, marginBottom: 8 }}>
+            {task.labels.map((l) => (
+              <span key={l} className="label-chip">
+                {l}
+              </span>
+            ))}
+          </div>
+        )}
+        <input
+          className="field"
+          placeholder="Labels, comma separated"
+          value={labelText}
+          onChange={(e) => setLabelText(e.target.value)}
+          onBlur={() => {
+            const next = Array.from(
+              new Set(
+                labelText
+                  .split(",")
+                  .map((l) => l.trim())
+                  .filter(Boolean)
+              )
+            );
+            const current = task.labels ?? [];
+            if (next.join(",") !== current.join(",")) {
+              onChangeLabels(task.id, next);
+            }
+          }}
+        />
       </div>
 
       <div className="comments">

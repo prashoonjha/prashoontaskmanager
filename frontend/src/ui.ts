@@ -84,3 +84,15 @@ export function isoToDateInput(value?: string | null): string {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+export function priorityLabel(priority?: string): string {
+  switch (priority) {
+    case "LOW":
+      return "Low";
+    case "HIGH":
+      return "High";
+    case "MEDIUM":
+    default:
+      return "Medium";
+  }
+}

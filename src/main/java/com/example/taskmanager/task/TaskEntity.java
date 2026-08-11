@@ -4,11 +4,12 @@ import com.example.taskmanager.project.ProjectEntity;
 import com.example.taskmanager.user.UserEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "tasks")
@@ -26,6 +27,12 @@ public class TaskEntity {
     DONE
   }
 
+  public enum Priority {
+    LOW,
+    MEDIUM,
+    HIGH
+  }
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -39,6 +46,16 @@ public class TaskEntity {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Status status;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private Priority priority;
+
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "task_labels", joinColumns = @JoinColumn(name = "task_id"))
+  @Column(name = "label", length = 40)
+  @Builder.Default
+  private Set<String> labels = new HashSet<>();
 
   private Instant dueAt;
 
@@ -55,14 +72,6 @@ public class TaskEntity {
   @Column(nullable = false, updatable = false)
   private Instant createdAt;
 
-  /** Expose just the assignee's username in JSON, not the whole user entity. */
-  @JsonProperty("assignee")
-  public AssigneeView getAssigneeView() {
-    return assignee == null ? null : new AssigneeView(assignee.getId(), assignee.getUsername());
-  }
-
-  public record AssigneeView(Long id, String username) {}
-
   @PrePersist
   public void prePersist() {
     if (createdAt == null) {
@@ -70,6 +79,9 @@ public class TaskEntity {
     }
     if (status == null) {
       status = Status.TODO;
+    }
+    if (priority == null) {
+      priority = Priority.MEDIUM;
     }
   }
 }

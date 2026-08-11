@@ -1,4 +1,4 @@
-import type { Project, Task, TaskStatus, Comment, Page } from "./types";
+import type { Project, Task, TaskStatus, TaskPriority, Comment, Page } from "./types";
 
 export const API_BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/+$/, "");
 
@@ -151,7 +151,10 @@ export async function fetchTasks(
   projectId: number,
   page = 0,
   size = 100,
-  status?: TaskStatus
+  status?: TaskStatus,
+  priority?: TaskPriority,
+  sortBy?: string,
+  dir?: string
 ): Promise<Page<Task>> {
   const query = new URLSearchParams({
     page: String(page),
@@ -159,6 +162,13 @@ export async function fetchTasks(
   });
   if (status) {
     query.set("status", status);
+  }
+  if (priority) {
+    query.set("priority", priority);
+  }
+  if (sortBy) {
+    query.set("sortBy", sortBy);
+    query.set("dir", dir ?? "asc");
   }
 
   return request<Page<Task>>(
@@ -172,6 +182,8 @@ export interface CreateTaskPayload {
   title: string;
   details?: string;
   status?: TaskStatus;
+  priority?: TaskPriority;
+  labels?: string[];
   dueAt?: string;
   assigneeUsername?: string;
 }
@@ -185,6 +197,8 @@ export async function createTask(
     title: payload.title,
     details: payload.details,
     status: payload.status,
+    priority: payload.priority,
+    labels: payload.labels,
     dueAt: payload.dueAt,
     assigneeUsername: payload.assigneeUsername,
   };
@@ -217,6 +231,8 @@ export interface TaskUpdate {
   title?: string;
   details?: string;
   status?: TaskStatus;
+  priority?: TaskPriority;
+  labels?: string[];
   dueAt?: string | null;
 }
 

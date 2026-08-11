@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +25,8 @@ public class TaskService {
       String title,
       String details,
       TaskEntity.Status status,
+      TaskEntity.Priority priority,
+      Set<String> labels,
       Instant dueAt,
       String assigneeUsername) {
 
@@ -33,6 +37,8 @@ public class TaskService {
         .title(title)
         .details(details)
         .status(status)
+        .priority(priority != null ? priority : TaskEntity.Priority.MEDIUM)
+        .labels(labels != null ? new HashSet<>(labels) : new HashSet<>())
         .dueAt(dueAt);
 
     if (assigneeUsername != null && !assigneeUsername.isBlank()) {

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
-import type { Task, TaskStatus } from "../types";
-import { statusLabel, dueInfo, dueText } from "../ui";
+import type { Task, TaskStatus, TaskPriority } from "../types";
+import { statusLabel, dueInfo, dueText, priorityLabel } from "../ui";
 
 type StatusFilter = TaskStatus | "ALL";
 
@@ -23,6 +23,8 @@ interface TaskListProps {
     title: string;
     details?: string;
     status: TaskStatus;
+    priority: TaskPriority;
+    labels?: string[];
     dueAt?: string;
     assigneeUsername?: string;
   }): Promise<void>;
@@ -41,10 +43,23 @@ export function TaskList({
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [status, setStatus] = useState<TaskStatus>("TODO");
+  const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
+  const [labelText, setLabelText] = useState("");
   const [assignee, setAssignee] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
+
+  function parseLabels(text: string): string[] {
+    return Array.from(
+      new Set(
+        text
+          .split(",")
+          .map((l) => l.trim())
+          .filter(Boolean)
+      )
+    );
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -52,10 +67,13 @@ export function TaskList({
     if (!trimmed) return;
     setBusy(true);
     try {
+      const labels = parseLabels(labelText);
       await onCreate({
         title: trimmed,
         details: details.trim() || undefined,
         status,
+        priority,
+        labels: labels.length ? labels : undefined,
         dueAt: dueDate ? new Date(dueDate + "T23:59:59").toISOString() : undefined,
         assigneeUsername: assignee.trim() || undefined,
       });
@@ -64,6 +82,8 @@ export function TaskList({
       setAssignee("");
       setDueDate("");
       setStatus("TODO");
+      setPriority("MEDIUM");
+      setLabelText("");
       setExpanded(false);
     } finally {
       setBusy(false);
@@ -128,11 +148,28 @@ export function TaskList({
                 <option value="IN_PROGRESS">In progress</option>
                 <option value="DONE">Done</option>
               </select>
+              <select
+                className="field"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as TaskPriority)}
+              >
+                <option value="LOW">Low priority</option>
+                <option value="MEDIUM">Medium priority</option>
+                <option value="HIGH">High priority</option>
+              </select>
+            </div>
+            <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
               <input
                 className="field"
                 placeholder="Assignee (optional)"
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
+              />
+              <input
+                className="field"
+                placeholder="Labels, comma separated"
+                value={labelText}
+                onChange={(e) => setLabelText(e.target.value)}
               />
             </div>
             <div style={{ marginTop: 8 }}>
@@ -184,6 +221,11 @@ export function TaskList({
                 <div className="task-card-title">
                   <span className={`dot dot-${task.status}`} />
                   <span className={isDone ? "task-done" : ""}>{task.title}</span>
+                  {task.priority && task.priority !== "MEDIUM" && (
+                    <span className={`prio-chip prio-${task.priority}`}>
+                      {priorityLabel(task.priority)}
+                    </span>
+                  )}
                 </div>
                 <div className="task-card-meta">
                   {statusLabel(task.status)}
@@ -194,6 +236,15 @@ export function TaskList({
                     <span className={`due-chip${dueClass}`}>{dueText(due)}</span>
                   ) : null}
                 </div>
+                {task.labels && task.labels.length > 0 && (
+                  <div className="label-row">
+                    {task.labels.map((l) => (
+                      <span key={l} className="label-chip">
+                        {l}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}

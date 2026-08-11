@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Project, Task, TaskStatus, Comment } from "../types";
+import type { Project, Task, TaskStatus, TaskPriority, Comment } from "../types";
 import {
   createComment,
   createProject,
@@ -21,6 +21,8 @@ export interface CreateTaskInput {
   title: string;
   details?: string;
   status: TaskStatus;
+  priority: TaskPriority;
+  labels?: string[];
   dueAt?: string;
   assigneeUsername?: string;
 }
@@ -212,6 +214,34 @@ export function useWorkspace(token: string) {
     [token, selectedProjectId]
   );
 
+  const changePriority = useCallback(
+    async (id: number, priority: TaskPriority) => {
+      if (selectedProjectId === null) return;
+      setError(null);
+      try {
+        const updated = await updateTask(token, selectedProjectId, id, { priority });
+        setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    },
+    [token, selectedProjectId]
+  );
+
+  const changeLabels = useCallback(
+    async (id: number, labels: string[]) => {
+      if (selectedProjectId === null) return;
+      setError(null);
+      try {
+        const updated = await updateTask(token, selectedProjectId, id, { labels });
+        setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    },
+    [token, selectedProjectId]
+  );
+
   const addComment = useCallback(
     async (bodyText: string) => {
       if (selectedTaskId === null) return;
@@ -264,6 +294,8 @@ export function useWorkspace(token: string) {
     removeTask,
     changeStatus,
     changeDueDate,
+    changePriority,
+    changeLabels,
     addComment,
     removeComment,
     clearError: () => setError(null),
