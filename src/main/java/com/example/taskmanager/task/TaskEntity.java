@@ -48,7 +48,7 @@ public class TaskEntity {
   private Status status;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Column
   private Priority priority;
 
   @ElementCollection(fetch = FetchType.EAGER)
