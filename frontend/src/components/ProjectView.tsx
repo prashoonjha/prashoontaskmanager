@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { TopBar } from "./TopBar";
 import { ProjectRail } from "./ProjectRail";
 import { TaskList } from "./TaskList";
 import { TaskDetail } from "./TaskDetail";
+import { KanbanBoard } from "./KanbanBoard";
 import { useWorkspace } from "../hooks/useWorkspace";
 
 interface ProjectViewProps {
@@ -12,6 +14,13 @@ interface ProjectViewProps {
 
 export function ProjectView({ token, username, onLogout }: ProjectViewProps) {
   const ws = useWorkspace(token);
+  const [view, setView] = useState<"list" | "board">("list");
+
+  useEffect(() => {
+    if (view === "board" && ws.filter !== "ALL") {
+      ws.setFilter("ALL");
+    }
+  }, [view, ws.filter, ws.setFilter]);
 
   return (
     <div className="app">
@@ -26,7 +35,22 @@ export function ProjectView({ token, username, onLogout }: ProjectViewProps) {
         </div>
       )}
 
-      <main className="workspace">
+      <div className="view-toggle">
+        <button
+          className={`view-btn${view === "list" ? " active" : ""}`}
+          onClick={() => setView("list")}
+        >
+          List
+        </button>
+        <button
+          className={`view-btn${view === "board" ? " active" : ""}`}
+          onClick={() => setView("board")}
+        >
+          Board
+        </button>
+      </div>
+
+      <main className={view === "board" ? "workspace board-mode" : "workspace"}>
         <ProjectRail
           projects={ws.projects}
           selectedId={ws.selectedProjectId}
@@ -37,29 +61,42 @@ export function ProjectView({ token, username, onLogout }: ProjectViewProps) {
           onCreate={ws.addProject}
         />
 
-        <TaskList
-          tasks={ws.tasks}
-          selectedTaskId={ws.selectedTaskId}
-          filter={ws.filter}
-          loading={ws.loadingTasks}
-          projectSelected={ws.selectedProjectId !== null}
-          onFilter={ws.setFilter}
-          onSelect={ws.selectTask}
-          onCreate={ws.addTask}
-        />
+        {view === "list" ? (
+          <>
+            <TaskList
+              tasks={ws.tasks}
+              selectedTaskId={ws.selectedTaskId}
+              filter={ws.filter}
+              loading={ws.loadingTasks}
+              projectSelected={ws.selectedProjectId !== null}
+              onFilter={ws.setFilter}
+              onSelect={ws.selectTask}
+              onCreate={ws.addTask}
+            />
 
-        <TaskDetail
-          task={ws.selectedTask}
-          comments={ws.comments}
-          loadingComments={ws.loadingComments}
-          onChangeStatus={ws.changeStatus}
-          onChangeDueDate={ws.changeDueDate}
-          onChangePriority={ws.changePriority}
-          onChangeLabels={ws.changeLabels}
-          onDeleteTask={ws.removeTask}
-          onAddComment={ws.addComment}
-          onDeleteComment={ws.removeComment}
-        />
+            <TaskDetail
+              task={ws.selectedTask}
+              comments={ws.comments}
+              loadingComments={ws.loadingComments}
+              onChangeStatus={ws.changeStatus}
+              onChangeDueDate={ws.changeDueDate}
+              onChangePriority={ws.changePriority}
+              onChangeLabels={ws.changeLabels}
+              onDeleteTask={ws.removeTask}
+              onAddComment={ws.addComment}
+              onDeleteComment={ws.removeComment}
+            />
+          </>
+        ) : (
+          <KanbanBoard
+            tasks={ws.tasks}
+            loading={ws.loadingTasks}
+            projectSelected={ws.selectedProjectId !== null}
+            selectedTaskId={ws.selectedTaskId}
+            onSelect={ws.selectTask}
+            onChangeStatus={ws.changeStatus}
+          />
+        )}
       </main>
     </div>
   );

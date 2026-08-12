@@ -735,3 +735,121 @@ select {
 .detail-labels {
   margin: 16px 0 6px;
 }
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 10px 20px 0;
+}
+.view-btn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: var(--radius);
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.view-btn.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.workspace.board-mode {
+  grid-template-columns: 220px 1fr;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  padding: 16px 18px;
+  overflow-y: auto;
+  align-items: start;
+}
+.board-col {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.board-col.over {
+  background: #f3f1ea;
+  border-color: var(--indigo);
+}
+.board-col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--line);
+}
+.board-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--faint);
+  background: var(--wash);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.board-col-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.board-empty {
+  font-size: 12px;
+  color: var(--faint);
+  text-align: center;
+  padding: 16px 0;
+}
+.board-card-wrap {
+  cursor: grab;
+}
+.board-card-wrap.dragging {
+  opacity: 0.4;
+}
+.board-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 10px 12px;
+  box-shadow: var(--shadow);
+}
+.board-card.active {
+  border-color: var(--indigo);
+}
+.board-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+.board-card-meta {
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+  .workspace.board-mode {
+    grid-template-columns: 1fr;
+  }
+}
