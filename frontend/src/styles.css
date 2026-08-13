@@ -853,3 +853,8 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+.filter-row-priority {
+  margin-top: -6px;
+  margin-bottom: 14px;
+}

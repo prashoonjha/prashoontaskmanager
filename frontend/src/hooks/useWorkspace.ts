@@ -34,6 +34,7 @@ export function useWorkspace(token: string) {
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [filter, setFilter] = useState<StatusFilter>("ALL");
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "ALL">("ALL");
 
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingTasks, setLoadingTasks] = useState(false);
@@ -99,7 +100,14 @@ export function useWorkspace(token: string) {
     let cancelled = false;
     setLoadingTasks(true);
     setError(null);
-    fetchTasks(token, projectId, 0, 100, filter === "ALL" ? undefined : filter)
+    fetchTasks(
+      token,
+      projectId,
+      0,
+      100,
+      filter === "ALL" ? undefined : filter,
+      priorityFilter === "ALL" ? undefined : priorityFilter
+    )
       .then((page) => {
         if (cancelled) return;
         setTasks(page.content);
@@ -110,7 +118,7 @@ export function useWorkspace(token: string) {
     return () => {
       cancelled = true;
     };
-  }, [token, selectedProjectId, filter]);
+  }, [token, selectedProjectId, filter, priorityFilter]);
 
   // ---- load comments ----
   useEffect(() => {
@@ -280,11 +288,13 @@ export function useWorkspace(token: string) {
     selectedTask,
     comments,
     filter,
+    priorityFilter,
     loadingProjects,
     loadingTasks,
     loadingComments,
     error,
     setFilter,
+    setPriorityFilter,
     selectProject: setSelectedProjectId,
     selectTask: setSelectedTaskId,
     progressFor,

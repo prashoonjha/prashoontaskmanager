@@ -67,9 +67,11 @@ export function ProjectView({ token, username, onLogout }: ProjectViewProps) {
               tasks={ws.tasks}
               selectedTaskId={ws.selectedTaskId}
               filter={ws.filter}
+              priorityFilter={ws.priorityFilter}
               loading={ws.loadingTasks}
               projectSelected={ws.selectedProjectId !== null}
               onFilter={ws.setFilter}
+              onPriorityFilter={ws.setPriorityFilter}
               onSelect={ws.selectTask}
               onCreate={ws.addTask}
             />

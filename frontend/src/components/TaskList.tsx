@@ -11,13 +11,24 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
   { value: "DONE", label: "Done" },
 ];
 
+type PriorityFilter = TaskPriority | "ALL";
+
+const PRIORITY_FILTERS: { value: PriorityFilter; label: string }[] = [
+  { value: "ALL", label: "Any priority" },
+  { value: "HIGH", label: "High" },
+  { value: "MEDIUM", label: "Medium" },
+  { value: "LOW", label: "Low" },
+];
+
 interface TaskListProps {
   tasks: Task[];
   selectedTaskId: number | null;
   filter: StatusFilter;
+  priorityFilter: PriorityFilter;
   loading: boolean;
   projectSelected: boolean;
   onFilter(filter: StatusFilter): void;
+  onPriorityFilter(priority: PriorityFilter): void;
   onSelect(id: number): void;
   onCreate(payload: {
     title: string;
@@ -34,9 +45,11 @@ export function TaskList({
   tasks,
   selectedTaskId,
   filter,
+  priorityFilter,
   loading,
   projectSelected,
   onFilter,
+  onPriorityFilter,
   onSelect,
   onCreate,
 }: TaskListProps) {
@@ -108,6 +121,18 @@ export function TaskList({
             onClick={() => onFilter(f.value)}
           >
             {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="filter-row filter-row-priority">
+        {PRIORITY_FILTERS.map((p) => (
+          <button
+            key={p.value}
+            className={`pill${priorityFilter === p.value ? " active" : ""}`}
+            onClick={() => onPriorityFilter(p.value)}
+          >
+            {p.label}
           </button>
         ))}
       </div>
